@@ -1,10 +1,6 @@
-Claro! Vou adicionar a notação de visibilidade para atributos e métodos usando a notação UML padrão:
-
 - **`+`**: Público (public)
 - **`-`**: Privado (private)
 - **`#`**: Protegido (protected)
-
-Aqui está como as classes ficariam com a notação de visibilidade:
 
 ### **Diagrama de Classes UML com Notação de Visibilidade**
 
@@ -121,4 +117,4 @@ Aqui está como as classes ficariam com a notação de visibilidade:
   - `Jogo` -> `Ranking`
   - `Jogo` -> `Interface`
 
-Você pode usar ferramentas como Lucidchart, draw.io (diagrams.net), StarUML, ou Visual Paradigm para desenhar esse diagrama com a notação UML. Eles permitirão que você crie diagramas visuais que representem claramente a estrutura e os relacionamentos entre suas classes.
+Lucidchart, draw.io (diagrams.net), StarUML, ou Visual Paradigm para desenhar o diagrama com a notação UML. 

@@ -1,129 +1,170 @@
-import pygame, sys
+import pygame, sys, random
 from pygame.locals import *
 
-# Definindo cores
-BLACK = pygame.Color('black')
-WHITE = pygame.Color('white')
-RED = pygame.Color('red')
-GREEN = pygame.Color('green')
-BLUE = pygame.Color('blue')
-YELLOW = pygame.Color('yellow')
+PRETO = pygame.Color('black')
+BRANCO = pygame.Color('white')
+VERMELHO = pygame.Color('red')
+VERDE = pygame.Color('green')
+AZUL = pygame.Color('blue')
+AMARELO = pygame.Color('yellow')
 
 # Configurações de tela
-SCREEN_WIDTH = 640
-SCREEN_HEIGHT = 480
-HALF_SCREEN_HEIGHT = int(SCREEN_HEIGHT / 2)
+LARGURA_TELA = 640
+ALTURA_TELA = 480
+METADE_ALTURA_TELA = int(ALTURA_TELA / 2)
+
+class CarroIA:
+    def __init__(self, x, y, velocidade, imagem, escala_inicial):
+        self.x = x
+        self.y = y
+        self.velocidade = velocidade
+        self.imagem_original = imagem
+        self.imagem = pygame.transform.scale(imagem, (int(imagem.get_width() * escala_inicial), int(imagem.get_height() * escala_inicial)))
+        self.escala = escala_inicial
+
+    def movimentar(self):
+        # Aumenta a escala e a posição vertical conforme o carro se aproxima
+        self.escala += 0.01
+        self.y += self.velocidade
+        self.x -= self.velocidade  # Ajusta a posição horizontal conforme o carro "vem da distância"
+        self.imagem = pygame.transform.scale(self.imagem_original, (int(self.imagem_original.get_width() * self.escala), int(self.imagem_original.get_height() * self.escala)))
+
+        # Reseta a posição quando o carro sai da tela
+        if self.y > ALTURA_TELA:
+            self.reset()
+
+    def reset(self):
+        self.escala = 0.1
+        self.x = random.randint(0, LARGURA_TELA - int(self.imagem_original.get_width() * self.escala))
+        self.y = -random.randint(100, 300)
+        self.velocidade = random.randint(3, 6)
+
+    def desenhar(self, tela):
+        tela.blit(self.imagem, (self.x, self.y))
 
 def main():
     pygame.init()
 
-    # Abrindo a janela do Pygame
-    screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
+    # Janela do Pygame
+    tela = pygame.display.set_mode((LARGURA_TELA, ALTURA_TELA))
     pygame.display.set_caption("simple road")
     
-    # Carregando imagens
-    light_road = pygame.image.load('./assets/images/light_road.png').convert()
-    dark_road = pygame.image.load('./assets/images/dark_road.png').convert()
-    car_image = pygame.image.load('./assets/images/carro.png').convert_alpha()
+    # Carrega as imagens
+    estrada_clara = pygame.image.load('./assets/images/light_road.png').convert()
+    estrada_escura = pygame.image.load('./assets/images/dark_road.png').convert()
+    imagem_carro = pygame.image.load('./assets/images/carro.png').convert_alpha()
+    imagem_carro_ia = pygame.image.load('./assets/images/rivals cars.png').convert_alpha()
 
     # Dimensões e posição inicial do carro
-    car_width, car_height = car_image.get_size()
-    car_x = (SCREEN_WIDTH - car_width) // 2
-    car_y = SCREEN_HEIGHT - car_height - 30  # Posição do carro na tela
+    largura_carro, altura_carro = imagem_carro.get_size()
+    posicao_carro_x = (LARGURA_TELA - largura_carro) // 2
+    posicao_carro_y = ALTURA_TELA - altura_carro - 30  # Posição do carro na tela
 
-    # Criando superfícies para as tiras de estrada
-    light_strip = pygame.Surface((SCREEN_WIDTH, 1)).convert()
-    dark_strip = pygame.Surface((SCREEN_WIDTH, 1)).convert()
-    light_strip.fill(light_road.get_at((0, 0)))
-    dark_strip.fill(dark_road.get_at((0, 0)))
+    # Criação dos pilotos IA com uma escala inicial pequena para simular a distância
+    carros_ia = [
+        CarroIA(random.randint(0, LARGURA_TELA - largura_carro), -random.randint(100, 300), 5, imagem_carro_ia, 0.1),
+        CarroIA(random.randint(0, LARGURA_TELA - largura_carro), -random.randint(100, 300), 4, imagem_carro_ia, 0.1),
+        CarroIA(random.randint(0, LARGURA_TELA - largura_carro), -random.randint(100, 300), 3, imagem_carro_ia, 0.1)
+    ]
+
+    # Superfícies para as tiras de estrada
+    faixa_clara = pygame.Surface((LARGURA_TELA, 1)).convert()
+    faixa_escura = pygame.Surface((LARGURA_TELA, 1)).convert()
+    faixa_clara.fill(estrada_clara.get_at((0, 0)))
+    faixa_escura.fill(estrada_escura.get_at((0, 0)))
 
     # Variáveis de controle
-    texture_position = 0
+    posicao_textura = 0
     ddz = 0.001
     dz = 0
     z = 0
-    road_pos = 0
-    road_acceleration = 80
-    texture_position_acceleration = 4
-    texture_position_threshold = 300
-    half_texture_position_threshold = int(texture_position_threshold / 2)
+    posicao_estrada = 0
+    aceleracao_estrada = 80
+    aceleracao_posicao_textura = 4
+    limite_posicao_textura = 300
+    metade_limite_posicao_textura = int(limite_posicao_textura / 2)
 
     # Variáveis para a curva
-    curve_position = 0
-    curve_velocity = 0
-    curve_acceleration = 0.01
-    s_curve_sharpness = 2
+    posicao_curva = 0
+    velocidade_curva = 0
+    aceleracao_curva = 0.01
+    s_curva_intensidade = 2
 
-    # Criando o mapa da curva
-    curve_map = []
-    for i in range(HALF_SCREEN_HEIGHT):
-        curve_velocity += curve_acceleration
-        curve_position += curve_velocity * s_curve_sharpness
-        curve_acceleration -= 0.0001
-        curve_map.append(curve_position)
+    # Mapa da curva
+    mapa_curva = []
+    for i in range(METADE_ALTURA_TELA):
+        velocidade_curva += aceleracao_curva
+        posicao_curva += velocidade_curva * s_curva_intensidade
+        aceleracao_curva -= 0.0001
+        mapa_curva.append(posicao_curva)
     
     # Variáveis de controle da curva
-    curve_map_length = len(curve_map)
-    curve_map_index = -1
-    curve_increment = 2
-    curve_direction = 1
-    curve_value = 0
+    tamanho_mapa_curva = len(mapa_curva)
+    indice_mapa_curva = -1
+    incremento_curva = 2
+    direcao_curva = 1
+    valor_curva = 0
 
     while True:
         pygame.time.Clock().tick(30)
         
-        for event in pygame.event.get():
-            if event.type == QUIT:
+        for evento in pygame.event.get():
+            if evento.type == QUIT:
                 pygame.quit()
                 sys.exit()
 
         # Controle de movimentação
-        keys = pygame.key.get_pressed()
-        if keys[K_UP]:
-            road_pos += road_acceleration
-            if road_pos >= texture_position_threshold:
-                road_pos = 0
-            curve_map_index += curve_increment
-            if curve_map_index >= curve_map_length:
-                curve_map_index = curve_map_length
-                curve_increment *= -1
-            elif curve_map_index < -1:
-                curve_increment *= -1
-                curve_direction *= -1
+        teclas = pygame.key.get_pressed()
+        if teclas[K_UP]:
+            posicao_estrada += aceleracao_estrada
+            if posicao_estrada >= limite_posicao_textura:
+                posicao_estrada = 0
+            indice_mapa_curva += incremento_curva
+            if indice_mapa_curva >= tamanho_mapa_curva:
+                indice_mapa_curva = tamanho_mapa_curva
+                incremento_curva *= -1
+            elif indice_mapa_curva < -1:
+                incremento_curva *= -1
+                direcao_curva *= -1
 
         # Movimento do carro
-        if keys[K_LEFT]:
-            car_x -= 5
-        if keys[K_RIGHT]:
-            car_x += 5
+        if teclas[K_LEFT]:
+            posicao_carro_x -= 5
+        if teclas[K_RIGHT]:
+            posicao_carro_x += 5
 
         # Limites do carro na tela
-        car_x = max(0, min(car_x, SCREEN_WIDTH - car_width))
+        posicao_carro_x = max(0, min(posicao_carro_x, LARGURA_TELA - largura_carro))
 
-        # Desenhando a estrada
-        texture_position = road_pos
+        # Desenho da estrada
+        posicao_textura = posicao_estrada
         dz = 0
         z = 0
-        screen.fill(BLUE)
-        for i in range(HALF_SCREEN_HEIGHT, 0, -1):
-            if curve_map_index >= i:
-                curve_value = curve_map[curve_map_index - i] * curve_direction
+        tela.fill(AZUL)
+        for i in range(METADE_ALTURA_TELA, 0, -1):
+            if indice_mapa_curva >= i:
+                valor_curva = mapa_curva[indice_mapa_curva - i] * direcao_curva
             else:
-                curve_value = 0
-            if texture_position < half_texture_position_threshold:
-                screen.blit(light_strip, (0, i + HALF_SCREEN_HEIGHT))
-                screen.blit(light_road, (curve_value, i + HALF_SCREEN_HEIGHT), (0, i, SCREEN_WIDTH, 1))
+                valor_curva = 0
+            if posicao_textura < metade_limite_posicao_textura:
+                tela.blit(faixa_clara, (0, i + METADE_ALTURA_TELA))
+                tela.blit(estrada_clara, (valor_curva, i + METADE_ALTURA_TELA), (0, i, LARGURA_TELA, 1))
             else:
-                screen.blit(dark_strip, (0, i + HALF_SCREEN_HEIGHT))
-                screen.blit(dark_road, (curve_value, i + HALF_SCREEN_HEIGHT), (0, i, SCREEN_WIDTH, 1))
+                tela.blit(faixa_escura, (0, i + METADE_ALTURA_TELA))
+                tela.blit(estrada_escura, (valor_curva, i + METADE_ALTURA_TELA), (0, i, LARGURA_TELA, 1))
             dz += ddz
             z += dz
-            texture_position += texture_position_acceleration + z
-            if texture_position >= texture_position_threshold:
-                texture_position = 0
+            posicao_textura += aceleracao_posicao_textura + z
+            if posicao_textura >= limite_posicao_textura:
+                posicao_textura = 0
 
-        # Desenhando o carro na tela
-        screen.blit(car_image, (car_x, car_y))
+        # Atualiza e desenha os pilotos IA
+        for carro_ia in carros_ia:
+            carro_ia.movimentar()
+            carro_ia.desenhar(tela)
+
+        # Desenha o carro do jogador na tela
+        tela.blit(imagem_carro, (posicao_carro_x, posicao_carro_y))
 
         pygame.display.flip()
 

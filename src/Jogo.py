@@ -27,7 +27,7 @@ class Jogo:
         self.estado_jogo = "iniciado"
         self.carro_jogador = CarroJogador()
         self.pista = Pista()
-        self.pilotos_ia = [PilotoIA() for _ in range(5)]  # Exemplo com 5 pilotos IA
+        self.pilotos_ia = [CarroIA() for _ in range(5)]  # Exemplo com 5 pilotos IA
         self.ranking = Ranking()
         self.som.tocar_trilha()
         self.loop_jogo()

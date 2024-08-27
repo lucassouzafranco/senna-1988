@@ -50,7 +50,7 @@ class CarroJogador(Carro):
             self.direcao += 0.1
         super().mover()
 
-class PilotoIA(Carro):
+class CarroIA(Carro):
     def __init__(self, x=0, y=0, velocidade=0, aceleracao=0, freio=0, direcao=0, sensibilidade=1, nivel_dificuldade=1):
         super().__init__(x, y, velocidade, aceleracao, freio, direcao, sensibilidade)
         self.nivel_dificuldade = nivel_dificuldade

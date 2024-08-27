@@ -41,7 +41,7 @@
 
    Desenvolver a lógica da IA e integrar sons e interface.
 
-  - Implementar a classe `PilotoIA` com variações de comportamento para diferentes dificuldades.
+  - Implementar a classe `CarroIA` com variações de comportamento para diferentes dificuldades.
   - Desenvolver a classe `Som` com métodos para tocar sons de eventos e trilha sonora.
   - Implementar a interface visual (`Interface`), incluindo o cronômetro e a posição de corrida.
 

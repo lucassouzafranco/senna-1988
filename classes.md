@@ -8,7 +8,7 @@
    - **Atributos:**
      - `- pista: Pista`
      - `- carro_jogador: CarroJogador`
-     - `- pilotos_ia: List[PilotoIA]`
+     - `- pilotos_ia: List[CarroIA]`
      - `- ranking: Ranking`
      - `- som: Som`
      - `- interface: Interface`
@@ -53,7 +53,7 @@
      - `+ mover()`
      - `+ acelerar()`
 
-5. **Classe `PilotoIA`** *(Herda de `Carro`)*
+5. **Classe `CarroIA`** *(Herda de `Carro`)*
    - **Atributos:**
      - `- nivel_dificuldade: str`
    - **Métodos:**
@@ -67,7 +67,7 @@
    - **Métodos:**
      - `+ calcular_estrategia()`
 
-7. **Classe `PilotoAvancado`** *(Herda de `PilotoIA` e `Estrategia`)*
+7. **Classe `PilotoAvancado`** *(Herda de `CarroIA` e `Estrategia`)*
    - **Métodos:**
      - `+ movimentar()`
      - `+ ajustar_velocidade()`
@@ -106,13 +106,13 @@
 
 - **Herança:**
   - `CarroJogador` <- `Carro` (herança pública)
-  - `PilotoIA` <- `Carro` (herança pública)
-  - `PilotoAvancado` <- `PilotoIA` + `Estrategia` (herança múltipla)
+  - `CarroIA` <- `Carro` (herança pública)
+  - `PilotoAvancado` <- `CarroIA` + `Estrategia` (herança múltipla)
 
 - **Composição:**
   - `Jogo` -> `Pista`
   - `Jogo` -> `CarroJogador`
-  - `Jogo` -> `PilotoIA`
+  - `Jogo` -> `CarroIA`
   - `Jogo` -> `Som`
   - `Jogo` -> `Ranking`
   - `Jogo` -> `Interface`

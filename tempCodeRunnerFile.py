@@ -1,100 +1,27 @@
-import pygame
-import sys
-import random
-from pygame.locals import *
-
-# Cores
-PRETO = pygame.Color('black')
-BRANCO = pygame.Color('white')
-VERMELHO = pygame.Color('red')
-VERDE = pygame.Color('green')
-AZUL = pygame.Color('blue')
-AMARELO = pygame.Color('yellow')
-
-# Configurações de tela
-LARGURA_TELA = 640
-ALTURA_TELA = 480
-METADE_ALTURA_TELA = int(ALTURA_TELA / 2)
-LARGURA_ESTRADA = 200  # Largura da estrada
-
-class CarroIA:
-    def __init__(self, x, y, velocidade, imagem, escala_inicial):
-        self.x = x
-        self.y = y
-        self.velocidade = velocidade
-        self.imagem_original = imagem
-        self.imagem = pygame.transform.scale(imagem, (int(imagem.get_width() * escala_inicial), int(imagem.get_height() * escala_inicial)))
-        self.escala = escala_inicial
-        self.direcao = random.choice([-1, 1])  # Direção inicial para mover-se lateralmente
-        self.movimento_lateral = random.randint(1, 3)  # Velocidade do movimento lateral
-        self.frequencia_mudanca = random.randint(30, 100)  # Frequência para mudar a direção lateral
-        self.contador_mudanca = 0
-
-    def movimentar(self):
-        # Movimento vertical
-        self.y += self.velocidade
-        
-        # Movimento lateral
-        self.contador_mudanca += 1
-        if self.contador_mudanca >= self.frequencia_mudanca:
-            self.direcao *= -1  # Muda a direção do movimento lateral
-            self.contador_mudanca = 0
-
-        self.x += self.direcao * self.movimento_lateral
-        
-        # Restrições para que o carro não saia da tela
-        self.x = max(240, min(self.x, 380))
-        
-        # Se o carro sai da tela, reinicie sua posição
-        if self.y > ALTURA_TELA:
-            self.reset()
-        
-        # Ajuste da escala
-        if self.escala < 1.0:
-            self.escala += 0.01
-        
-        self.imagem = pygame.transform.scale(self.imagem_original, (int(self.imagem_original.get_width() * self.escala), int(self.imagem_original.get_height() * self.escala)))
-
-    def reset(self):
-        self.escala = 0.2
-        self.y = METADE_ALTURA_TELA - random.randint(20, 50)
-        self.velocidade = random.randint(3, 6)
-        self.x = random.randint(240, 380)
-        self.direcao = random.choice([-1, 1])
-        self.movimento_lateral = random.randint(1, 3)
-        self.frequencia_mudanca = random.randint(30, 100)
-        self.contador_mudanca = 0
-
-    def desenhar(self, tela):
-        tela.blit(self.imagem, (self.x, self.y))
-
-def desenhar_estrada(tela):
-    # Borda esquerda e direita da estrada
-    pygame.draw.rect(tela, VERMELHO, (240, 0, 10, ALTURA_TELA), 3)  # Borda esquerda
-    pygame.draw.rect(tela, VERMELHO, (LARGURA_TELA - 250, 0, 10, ALTURA_TELA), 3)  # Borda direita
-
 def main():
     pygame.init()
 
     # Janela do Pygame
     tela = pygame.display.set_mode((LARGURA_TELA, ALTURA_TELA))
-    pygame.display.set_caption("simple road")
+    pygame.display.set_caption("Simple Road")
     
     # Carrega as imagens
     estrada_clara = pygame.image.load('./assets/images/light_road.png').convert()
     estrada_escura = pygame.image.load('./assets/images/dark_road.png').convert()
-    imagem_carro = pygame.image.load('./assets/images/carro.png').convert_alpha()
-    imagem_carro_ia = pygame.image.load('./assets/images/rivals cars.png').convert_alpha()
+    imagem_carro = pygame.image.load('./assets/images/f1_car_centered.png').convert_alpha()
+    imagem_carro_ia = pygame.image.load('./assets/images/enemies_cars.png').convert_alpha()
 
     largura_carro, altura_carro = imagem_carro.get_size()
     posicao_carro_x = (LARGURA_TELA - largura_carro) // 2
     posicao_carro_y = ALTURA_TELA - altura_carro - 30
 
     carros_ia = [
-        CarroIA(random.randint(240, 380), METADE_ALTURA_TELA - random.randint(20, 50), 1, imagem_carro_ia, 0.2),
-        CarroIA(random.randint(240, 380), METADE_ALTURA_TELA - random.randint(20, 50), 1, imagem_carro_ia, 0.2),
-        CarroIA(random.randint(240, 380), METADE_ALTURA_TELA - random.randint(20, 50), 1, imagem_carro_ia, 0.2)
+        CarroIA(random.randint(240, 380), METADE_ALTURA_TELA - random.randint(20, 40), 0.7, imagem_carro_ia, 0.1),
+        CarroIA(random.randint(240, 380), METADE_ALTURA_TELA - random.randint(20, 40), 0.7, imagem_carro_ia, 0.1),
+        CarroIA(random.randint(240, 380), METADE_ALTURA_TELA - random.randint(20, 40), 0.7, imagem_carro_ia, 0.1)
     ]
+
+    colisoes = 0
 
     faixa_clara = pygame.Surface((LARGURA_TELA, 1)).convert()
     faixa_escura = pygame.Surface((LARGURA_TELA, 1)).convert()
@@ -109,7 +36,7 @@ def main():
     aceleracao_estrada = 80
     aceleracao_posicao_textura = 4
     limite_posicao_textura = 300
-    metade_limite_posicao_textura = int(limite_posicao_textura / 2)
+    metade_limite_posicao_textura = limite_posicao_textura // 2
 
     global valor_curva
     posicao_curva = 0
@@ -179,11 +106,29 @@ def main():
             if posicao_textura >= limite_posicao_textura:
                 posicao_textura = 0
 
-        desenhar_estrada(tela)  # Desenhe a estrada e as bordas
-
         for carro_ia in carros_ia:
             carro_ia.movimentar()
+            
+            # Verifica colisão entre o carro do jogador e o carro IA
+            rect_carro_jogador = pygame.Rect(posicao_carro_x + 26, posicao_carro_y, largura_carro - 52, altura_carro)
+            rect_carro_ia = pygame.Rect(carro_ia.x, carro_ia.y, carro_ia.imagem.get_width(), carro_ia.imagem.get_height())
+            
+            # Ajuste do retângulo de colisão para ficar próximo da área real do carro
+            rect_carro_ia.inflate_ip(-10, -10)
+            
+            if rect_carro_jogador.colliderect(rect_carro_ia):
+                if not carro_ia.collided:
+                    colisoes += 1
+                    carro_ia.collided = True
+            else:
+                carro_ia.collided = False  # Moveu para fora do 'if' anterior
+            
             carro_ia.desenhar(tela)
+
+        # Atualizar e exibir o contador de colisões
+        fonte = pygame.font.SysFont(None, 30)
+        contador_texto = fonte.render("Colisões: " + str(colisoes), True, BRANCO)
+        tela.blit(contador_texto, (10, 10))
 
         tela.blit(imagem_carro, (posicao_carro_x, posicao_carro_y))
         pygame.display.update()

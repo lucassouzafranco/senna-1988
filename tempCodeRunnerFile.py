@@ -1,1 +1,1 @@
-mensagem_derrota = fonte.render("Você perdeu!", True, VERMELHO, PRETO)
+carro_perigoso = None  # Inicialmente, o CarroPerigoso não existe

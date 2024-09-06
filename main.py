@@ -89,8 +89,8 @@ def main():
     # Carrega as imagens
     estrada_clara = pygame.image.load('./assets/images/light_road.png').convert()
     estrada_escura = pygame.image.load('./assets/images/dark_road.png').convert()
-    imagem_carro = pygame.image.load('./assets/images/f1_car_centered.png').convert_alpha()
-    imagem_carro_ia = pygame.image.load('./assets/images/enemies_cars.png').convert_alpha()
+    imagem_carro = pygame.image.load('./assets/images/centered_player_car.png.').convert_alpha()
+    imagem_carro_ia = pygame.image.load('./assets/images/enemies_car_1.png').convert_alpha()
 
     largura_carro, altura_carro = imagem_carro.get_size()
     posicao_carro_x = (LARGURA_TELA - largura_carro) // 2
@@ -159,7 +159,7 @@ def main():
 
         for carro_ia in carros_ia:
             carro_ia.movimentar()
-            rect_carro_jogador = pygame.Rect(posicao_carro_x, posicao_carro_y, largura_carro, altura_carro)
+            rect_carro_jogador = pygame.Rect(posicao_carro_x + 26, posicao_carro_y, largura_carro - 52, altura_carro)
             rect_carro_ia = pygame.Rect(carro_ia.x, carro_ia.y, carro_ia.imagem.get_width(), carro_ia.imagem.get_height())
             rect_carro_ia.inflate_ip(-20, -20)
             if rect_carro_jogador.colliderect(rect_carro_ia):
@@ -169,7 +169,7 @@ def main():
                     if colisoes >= 7:
                         # O jogador perdeu o jogo
                         fonte = pygame.font.SysFont(None, 50)
-                        mensagem_derrota = fonte.render("Você perdeu!", True, VERMELHO)
+                        mensagem_derrota = font.render("Você perdeu!", True, VERMELHO, PRETO)
                         tela.blit(mensagem_derrota, (LARGURA_TELA // 2 - mensagem_derrota.get_width() // 2, ALTURA_TELA // 2 - mensagem_derrota.get_height() // 2))
                         pygame.display.update()
                         pygame.time.delay(2000)  # Aguarda 2 segundos
@@ -202,7 +202,7 @@ def main():
             # Exibir o tempo restante
             segundos_restantes = tempo_restante // 1000
             fonte = pygame.font.SysFont(None, 30)
-            tempo_texto = fonte.render("Tempo restante: " + str(segundos_restantes) + "s", True, BRANCO)
+            tempo_texto = fonte.render("Tempo até a linha de chegada: " + str(segundos_restantes) + "s", True, BRANCO)
             tela.blit(tempo_texto, (LARGURA_TELA - tempo_texto.get_width() - 10, 10))
 
         tela.blit(imagem_carro, (posicao_carro_x, posicao_carro_y))
